@@ -1,14 +1,20 @@
 const { clipboard } = require('electron');
 const crypto = require('crypto');
+const { readCopiedFilePaths } = require('./filePasteboard');
 
 const POLL_INTERVAL_MS = 500;
 const MAC_CONCEALED_FORMATS = ['org.nspasteboard.ConcealedType', 'org.nspasteboard.TransientType'];
 
-/** Polls the system clipboard and reports newly copied text or images. */
+/**
+ * Polls the system clipboard and reports newly copied files, text or images.
+ * `shouldCapture(kind)` lets settings pause recording or disable a kind.
+ */
 class ClipboardMonitor {
-  constructor({ onTextCopied, onImageCopied }) {
+  constructor({ onTextCopied, onImageCopied, onFilesCopied, shouldCapture }) {
     this.onTextCopied = onTextCopied;
     this.onImageCopied = onImageCopied;
+    this.onFilesCopied = onFilesCopied;
+    this.shouldCapture = shouldCapture;
     this.lastSignature = this.readSnapshot()?.signature ?? null;
     this.timer = null;
   }
@@ -20,12 +26,17 @@ class ClipboardMonitor {
   /** Writes text without recording it again as a new copy. */
   writeText(text) {
     clipboard.writeText(text);
-    this.lastSignature = this.readSnapshot()?.signature ?? null;
+    this.syncSignature();
   }
 
   /** Writes an image without recording it again as a new copy. */
   writeImage(image) {
     clipboard.writeImage(image);
+    this.syncSignature();
+  }
+
+  /** Call after the clipboard was changed by Clipbo itself. */
+  syncSignature() {
     this.lastSignature = this.readSnapshot()?.signature ?? null;
   }
 
@@ -52,14 +63,18 @@ class ClipboardMonitor {
     const signature = snapshot?.signature ?? null;
     if (signature === this.lastSignature) return;
     this.lastSignature = signature;
-    if (!snapshot) return;
+    if (!snapshot || !this.shouldCapture(snapshot.kind)) return;
 
     if (snapshot.kind === 'text') this.onTextCopied(snapshot.text);
-    else this.onImageCopied(snapshot.image, snapshot.hash);
+    else if (snapshot.kind === 'image') this.onImageCopied(snapshot.image, snapshot.hash);
+    else this.onFilesCopied(snapshot.filePaths);
   }
 
-  /** Text wins over image, because apps like Excel put both on the clipboard. */
+  /** Files win over text (Finder also adds the file name as text), and text wins over image. */
   readSnapshot() {
+    const filePaths = readCopiedFilePaths(clipboard);
+    if (filePaths.length) return { kind: 'files', signature: `files:${filePaths.join('|')}`, filePaths };
+
     const text = clipboard.readText();
     if (text.trim()) return { kind: 'text', signature: `text:${text}`, text };
 

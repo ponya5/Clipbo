@@ -1,5 +1,7 @@
 const { nativeImage } = require('electron');
 const { pasteIntoFocusedApp } = require('./pasteService');
+const { writeFilesToClipboard } = require('./fileClipboard');
+const { allFilesExist } = require('./fileInfo');
 
 const PASTE_DELAY_MS = 150;
 
@@ -21,6 +23,15 @@ class ClipboardActions {
     this.closePanelAndPaste();
   }
 
+  /** Returns { ok: false, message } when a file was moved or deleted since it was copied. */
+  async pasteFiles(filePaths) {
+    if (!allFilesExist(filePaths)) return { ok: false, message: 'The file no longer exists at its original location' };
+    await writeFilesToClipboard(filePaths);
+    this.clipboardMonitor.syncSignature();
+    this.closePanelAndPaste();
+    return { ok: true };
+  }
+
   pasteSecret(secret) {
     this.pasteText(secret);
     this.scheduleSecretClear(secret);
@@ -40,8 +51,10 @@ class ClipboardActions {
     setTimeout(() => this.clipboardMonitor.clearIfTextEquals(secret), clearAfterSeconds * 1000);
   }
 
+  /** With "paste automatically" off, the item is only placed on the clipboard. */
   closePanelAndPaste() {
     this.panelWindow.hide();
+    if (!this.settings.get('autoPaste')) return;
     setTimeout(pasteIntoFocusedApp, PASTE_DELAY_MS);
   }
 }

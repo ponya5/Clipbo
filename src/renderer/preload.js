@@ -10,7 +10,8 @@ contextBridge.exposeInMainWorld('clipbo', {
     list: invoke('history:list'),
     paste: invoke('history:paste'),
     remove: invoke('history:remove'),
-    togglePin: invoke('history:togglePin')
+    togglePin: invoke('history:togglePin'),
+    preview: invoke('history:preview')
   },
   vault: {
     status: invoke('vault:status'),
@@ -26,6 +27,7 @@ contextBridge.exposeInMainWorld('clipbo', {
   },
   settings: {
     getAll: invoke('settings:getAll'),
+    getValues: invoke('settings:getValues'),
     set: invoke('settings:set'),
     setLaunchAtLogin: invoke('settings:setLaunchAtLogin')
   },

@@ -18,7 +18,7 @@
 
 You copy something, then copy something else, and the first thing is gone. Clipbo remembers everything you copy, lets you pick it back in a second, and keeps your important keys in a safe place.
 
-- **Never lose a copy.** Text and images are saved automatically. Images show as thumbnails.
+- **Never lose a copy.** Text, images, files and videos are saved automatically, with thumbnails and a full preview.
 - **Paste in one step.** Open Clipbo, search, select. It pastes into the app you were using.
 - **A real vault for your keys.** API keys and passwords you use all the time live in an encrypted vault. They never expire and are never mixed into your history.
 - **Private by design.** No accounts, no cloud, no tracking. Nothing leaves your computer.
@@ -27,7 +27,8 @@ You copy something, then copy something else, and the first thing is gone. Clipb
 ## Features
 
 **Clipboard history**
-- Saves text and images, with image thumbnails
+- Saves text, images, files and **videos**, with thumbnails
+- Quick preview: play a copied video or view an image full size before pasting
 - Instant search
 - Pin items you always need
 - Duplicates are merged, history size is yours to choose
@@ -41,6 +42,13 @@ You copy something, then copy something else, and the first thing is gone. Clipb
 - Secrets are cleared from the clipboard after a time you choose (or never)
 - Auto-locks after a time you choose, and when your computer sleeps
 - Encrypted backup and restore
+
+**Make it yours (Settings screen)**
+- Change the global shortcut by simply pressing the new keys
+- Choose how the pop-up appears: centered or next to your mouse, and its size
+- Thumbnail size and style
+- Paste automatically or just copy, pause recording, choose what gets saved (images, files)
+- Vault auto-lock, clipboard clearing, lock on sleep, generated password length
 
 **Everyday comfort**
 - Lives in the menu bar or system tray

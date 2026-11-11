@@ -49,10 +49,33 @@ main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
   word-break: break-word; white-space: pre-wrap; line-height: 1.35;
 }
 .image-content { display: flex; align-items: center; gap: 10px; }
-.thumbnail {
-  max-height: 56px; max-width: 160px; border-radius: 6px; background: #fff2;
-  border: 1px solid #ffffff22; object-fit: contain;
+:root { --thumb-height: 56px; --thumb-fit: contain; }
+.thumbnail-frame {
+  position: relative; flex: none; display: flex; align-items: center; justify-content: center;
+  height: var(--thumb-height); width: calc(var(--thumb-height) * 1.5);
+  border-radius: 6px; overflow: hidden; background: #ffffff14; border: 1px solid #ffffff22;
 }
+.thumbnail { width: 100%; height: 100%; object-fit: var(--thumb-fit); }
+.thumbnail.placeholder { display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.play-badge {
+  position: absolute; right: 4px; bottom: 4px; width: 18px; height: 18px; border-radius: 50%;
+  background: #000a; color: #fff; font-size: 9px; text-align: center; line-height: 18px;
+}
+.file-name { word-break: break-word; line-height: 1.3; }
+#preview {
+  position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
+  background: #050c24ee; padding: 16px;
+}
+#preview img, #preview video { max-width: 100%; max-height: 100%; border-radius: 10px; }
+.preview-missing { color: var(--muted); text-align: center; }
+#toast {
+  position: fixed; left: 50%; bottom: 44px; transform: translateX(-50%); z-index: 11;
+  padding: 8px 14px; border-radius: 10px; background: var(--danger); color: #1a0000; font-weight: 600; font-size: 12px;
+}
+.settings-section { display: flex; flex-direction: column; gap: 6px; }
+input.toggle { width: auto; }
+.shortcut { min-width: 110px; font-weight: 700; color: var(--accent); }
+.shortcut.recording { border-color: var(--blue); color: var(--text); }
 .image-label { color: var(--muted); font-size: 12px; }
 .meta { flex: none; display: flex; gap: 6px; color: var(--muted); font-size: 11px; }
 .entry-title { font-weight: 600; }

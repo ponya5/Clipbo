@@ -2,7 +2,8 @@
 
 ## 1.0.0
 
-- Clipboard history for text and images with thumbnails, search, pinning.
+- Clipboard history for text, images, files and videos with thumbnails, preview, search, pinning.
+- Full settings screen: custom shortcut, pop-up position and size, thumbnail options, paste and capture behaviour, vault options.
 - Encrypted vault for passwords and API keys: entries never expire, notes field, copy or paste, generator, change master password, encrypted backup and restore.
 - Configurable vault auto-lock (including never) and clipboard clearing (including never); lock on sleep and screen lock; brute-force lockout.
 - Global shortcut, keyboard-first navigation, tray menu, launch at login.

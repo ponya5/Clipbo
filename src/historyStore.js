@@ -2,12 +2,15 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 const { JsonFileStore } = require('./jsonFileStore');
+const { describeFiles } = require('./fileInfo');
 
 const THUMBNAIL_HEIGHT = 96;
 
 class HistoryStore {
-  constructor(dataDirectory, settings, onChange) {
+  /** `createFileThumbnail(path)` resolves to a data URL or null. */
+  constructor(dataDirectory, settings, onChange, createFileThumbnail = async () => null) {
     this.settings = settings;
+    this.createFileThumbnail = createFileThumbnail;
     this.onChange = onChange;
     this.store = new JsonFileStore(dataDirectory, 'history.json', []);
     this.items = this.store.load();
@@ -43,6 +46,33 @@ class HistoryStore {
     fs.writeFileSync(this.imagePathFor(id), image.toPNG(), { mode: 0o600 });
     const thumbnail = image.resize({ height: Math.min(height, THUMBNAIL_HEIGHT) }).toDataURL();
     this.insert({ id, type: 'image', hash, thumbnail, width, height, pinned: false, copiedAt: Date.now() });
+  }
+
+  /** Files are referenced, not copied, so large videos cost no extra disk space. */
+  addFiles(filePaths) {
+    const signature = filePaths.join('|');
+    const existingItem = this.items.find((item) => item.type === 'file' && item.paths.join('|') === signature);
+    if (existingItem) return this.moveToTop(existingItem);
+
+    const item = {
+      id: randomUUID(),
+      type: 'file',
+      paths: filePaths,
+      thumbnail: null,
+      ...describeFiles(filePaths),
+      pinned: false,
+      copiedAt: Date.now()
+    };
+    this.insert(item);
+    this.attachThumbnailWhenReady(item);
+  }
+
+  attachThumbnailWhenReady(item) {
+    this.createFileThumbnail(item.paths[0]).then((thumbnail) => {
+      if (!thumbnail || !this.find(item.id)) return;
+      item.thumbnail = thumbnail;
+      this.persist();
+    });
   }
 
   togglePin(itemId) {

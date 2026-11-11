@@ -2,13 +2,12 @@ import { el } from './dom.js';
 import { ListController } from './listController.js';
 import { commandKeyLabel, hasCommandKey, isBackspaceOrDelete } from './keyboard.js';
 
-const GENERATED_PASSWORD_LENGTH = 24;
 const PASSWORD_ALPHABET =
   'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_=+';
 const QUICK_PICK_COUNT = 9;
 
-function generatePassword() {
-  const randomValues = crypto.getRandomValues(new Uint32Array(GENERATED_PASSWORD_LENGTH));
+function generatePassword(length) {
+  const randomValues = crypto.getRandomValues(new Uint32Array(length));
   return Array.from(randomValues, (value) => PASSWORD_ALPHABET[value % PASSWORD_ALPHABET.length]).join('');
 }
 
@@ -27,8 +26,9 @@ const GATE_HINTS = [['Enter', 'continue'], ['Tab', 'history']];
 
 /** Modes: loading | setup | locked | list | form | changePassword */
 export class VaultView {
-  constructor({ listElement, overlayElement, api, onModeChange }) {
+  constructor({ listElement, overlayElement, api, onModeChange, getGeneratorLength }) {
     this.api = api;
+    this.getGeneratorLength = getGeneratorLength;
     this.overlayElement = overlayElement;
     this.onModeChange = onModeChange;
     this.query = '';
@@ -276,7 +276,7 @@ export class VaultView {
       attributes: { type: 'button' },
       on: {
         click: () => {
-          passwordInput.value = generatePassword();
+          passwordInput.value = generatePassword(this.getGeneratorLength());
           passwordInput.type = 'text';
           toggleButton.textContent = 'Hide';
         }

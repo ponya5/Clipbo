@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; style-src 'self'; script-src 'self'; img-src data:">
+        content="default-src 'none'; style-src 'self'; script-src 'self'; img-src data: file:; media-src file:">
   <link rel="stylesheet" href="styles.css">
   <title>Clipbo</title>
 </head>
@@ -20,6 +20,8 @@
     <ul id="list"></ul>
     <section id="overlay" hidden></section>
   </main>
+  <div id="preview" hidden></div>
+  <div id="toast" hidden></div>
   <footer>
     <div id="hints"></div>
     <span id="version"></span>

@@ -1,13 +1,17 @@
 const path = require('path');
 const { app, BrowserWindow, screen } = require('electron');
 
-const PANEL_WIDTH = 480;
-const PANEL_HEIGHT = 620;
+const PANEL_SIZES = {
+  compact: { width: 420, height: 520 },
+  normal: { width: 480, height: 620 },
+  large: { width: 560, height: 740 }
+};
 const IGNORE_SHOW_AFTER_HIDE_MS = 250;
 
 /** The popup that shows clipboard history and the vault. */
 class PanelWindow {
-  constructor() {
+  constructor(settings) {
+    this.settings = settings;
     this.window = null;
     this.lastHiddenAt = 0;
     this.isAutoHideSuspended = false;
@@ -15,8 +19,7 @@ class PanelWindow {
 
   create() {
     this.window = new BrowserWindow({
-      width: PANEL_WIDTH,
-      height: PANEL_HEIGHT,
+      ...this.currentSize(),
       show: false,
       frame: false,
       resizable: false,
@@ -37,7 +40,7 @@ class PanelWindow {
     this.window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     this.window.webContents.on('will-navigate', (event) => event.preventDefault());
     this.window.on('blur', () => {
-      if (!this.isAutoHideSuspended) this.hide();
+      if (!this.isAutoHideSuspended && this.settings.get('hideOnBlur')) this.hide();
     });
   }
 
@@ -62,7 +65,8 @@ class PanelWindow {
 
   show(tabName) {
     if (Date.now() - this.lastHiddenAt < IGNORE_SHOW_AFTER_HIDE_MS) return;
-    this.centerOnCursorDisplay();
+    this.window.setSize(...Object.values(this.currentSize()));
+    this.positionWindow();
     this.window.show();
     this.window.focus();
     this.send('panel:shown', tabName);
@@ -80,12 +84,25 @@ class PanelWindow {
     this.window.webContents.send(channel, ...args);
   }
 
-  centerOnCursorDisplay() {
-    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-    const { x, y, width, height } = display.workArea;
+  currentSize() {
+    return PANEL_SIZES[this.settings.get('popupSize')] ?? PANEL_SIZES.normal;
+  }
+
+  /** Centers on the screen with the cursor, or places the panel next to the cursor, kept fully on screen. */
+  positionWindow() {
+    const cursorPoint = screen.getCursorScreenPoint();
+    const { x, y, width, height } = screen.getDisplayNearestPoint(cursorPoint).workArea;
+    const { width: panelWidth, height: panelHeight } = this.currentSize();
+
+    if (this.settings.get('popupPosition') === 'mouse') {
+      const left = Math.min(Math.max(cursorPoint.x - panelWidth / 2, x), x + width - panelWidth);
+      const top = Math.min(Math.max(cursorPoint.y + 12, y), y + height - panelHeight);
+      this.window.setPosition(Math.round(left), Math.round(top));
+      return;
+    }
     this.window.setPosition(
-      Math.round(x + (width - PANEL_WIDTH) / 2),
-      Math.round(y + (height - PANEL_HEIGHT) / 3)
+      Math.round(x + (width - panelWidth) / 2),
+      Math.round(y + (height - panelHeight) / 3)
     );
   }
 }

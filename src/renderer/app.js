@@ -3,6 +3,7 @@ import { VaultView } from './vaultView.js';
 import { SettingsView } from './settingsView.js';
 import { commandKeyLabel, hasCommandKey, digitIndex } from './keyboard.js';
 import { el } from './dom.js';
+import { Preview } from './preview.js';
 
 const api = window.clipbo;
 const searchInput = document.getElementById('search');
@@ -10,18 +11,54 @@ const listElement = document.getElementById('list');
 const overlayElement = document.getElementById('overlay');
 const hintsElement = document.getElementById('hints');
 const versionElement = document.getElementById('version');
+const toastElement = document.getElementById('toast');
 const tabButtons = [...document.querySelectorAll('.tab')];
+
+const preview = new Preview(document.getElementById('preview'));
+const THUMBNAIL_HEIGHTS = { small: '40px', medium: '56px', large: '96px' };
+const TOAST_DURATION_MS = 2800;
+let generatorLength = 24;
+let toastTimer = null;
+
+function notify(message) {
+  toastElement.textContent = message;
+  toastElement.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastElement.hidden = true; }, TOAST_DURATION_MS);
+}
+
+/** Applies settings that affect how the interface looks or behaves. */
+async function loadDisplaySettings() {
+  const values = await api.settings.getValues();
+  const rootStyle = document.documentElement.style;
+  rootStyle.setProperty('--thumb-height', THUMBNAIL_HEIGHTS[values.thumbnailSize]);
+  rootStyle.setProperty('--thumb-fit', values.thumbnailFit);
+  generatorLength = values.generatorLength;
+}
 
 const historyView = new HistoryView({
   listElement,
   api,
+  showPreview: (previewData) => preview.show(previewData),
+  notify,
   saveTextToVault: (text) => {
     vaultView.setDraftPassword(text);
     switchTab('vault');
   }
 });
-const vaultView = new VaultView({ listElement, overlayElement, api, onModeChange: refreshChrome });
-const settingsView = new SettingsView({ overlayElement, api, onModeChange: refreshChrome });
+const vaultView = new VaultView({
+  listElement,
+  overlayElement,
+  api,
+  onModeChange: refreshChrome,
+  getGeneratorLength: () => generatorLength
+});
+const settingsView = new SettingsView({
+  overlayElement,
+  api,
+  onModeChange: refreshChrome,
+  onSettingsChanged: loadDisplaySettings
+});
 const views = { history: historyView, vault: vaultView, settings: settingsView };
 let activeTabName = 'history';
 
@@ -61,6 +98,11 @@ function isTypingInFormField(event) {
 
 function handleKeyDown(event) {
   const view = activeView();
+
+  if (event.key === 'Escape' && preview.isOpen()) {
+    preview.close();
+    return;
+  }
 
   if (event.key === 'Escape') {
     if (activeTabName === 'settings') {
@@ -116,6 +158,8 @@ searchInput.addEventListener('input', () => activeView().onSearch(searchInput.va
 document.addEventListener('keydown', handleKeyDown);
 
 api.onPanelShown((requestedTab) => {
+  preview.close();
+  loadDisplaySettings();
   if (requestedTab && requestedTab !== activeTabName) {
     switchTab(requestedTab);
     return;
@@ -131,6 +175,7 @@ api.onVaultLocked(() => {
   if (activeTabName === 'vault') refreshActiveView();
 });
 
+loadDisplaySettings();
 api.app.info().then((appInfo) => {
   versionElement.textContent = `v${appInfo.version}`;
 });

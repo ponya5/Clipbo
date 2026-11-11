@@ -1,0 +1,104 @@
+{
+  "name": "clipbo",
+  "version": "1.0.0",
+  "description": "Clipboard history manager with image thumbnails and an encrypted password vault for macOS and Windows",
+  "main": "src/main.js",
+  "license": "MIT",
+  "author": {
+    "name": "Daniel Shalom",
+    "url": "https://github.com/danielShalom"
+  },
+  "keywords": [
+    "clipboard",
+    "clipboard-manager",
+    "password-vault",
+    "electron",
+    "macos",
+    "windows"
+  ],
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/*.test.js\"",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build": "electron-builder --mac --win",
+    "audit:prod": "npm audit --omit=dev"
+  },
+  "devDependencies": {
+    "electron": "^43.8.8",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.clipbo.app",
+    "productName": "Clipbo",
+    "copyright": "Copyright \u00a9 Daniel Shalom",
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "build/tray.png",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "extendInfo": {
+        "LSUIElement": true,
+        "NSAppleEventsUsageDescription": "Clipbo uses System Events to paste the item you select into the active app."
+      }
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}-${arch}.${ext}"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielShalom/clipbo.git"
+  },
+  "homepage": "https://github.com/danielShalom/clipbo#readme",
+  "bugs": {
+    "url": "https://github.com/danielShalom/clipbo/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

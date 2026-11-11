@@ -3,3 +3,5 @@ dist/
 installers/
 .DS_Store
 *.log
+.vscode/
+.idea/

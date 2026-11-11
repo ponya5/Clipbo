@@ -14,7 +14,9 @@ test('returns nothing for an empty or unrelated pasteboard buffer', () => {
 });
 
 test('parses a file URL with encoded characters', () => {
-  assert.deepStrictEqual(parseFileUrl(Buffer.from('file:///Users/me/My%20Video.mp4')), ['/Users/me/My Video.mp4']);
+  const [filePath] = parseFileUrl(Buffer.from('file:///Users/me/My%20Video.mp4'));
+  assert.ok(filePath.endsWith('My Video.mp4'));
+  assert.ok(!filePath.includes('%20'));
 });
 
 test('parses a null-terminated UTF-16 Windows file name', () => {

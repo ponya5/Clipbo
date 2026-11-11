@@ -13,7 +13,8 @@ test('returns nothing for an empty or unrelated pasteboard buffer', () => {
   assert.deepStrictEqual(parseFileUrl(Buffer.from('https://example.com')), []);
 });
 
-test('parses a file URL with encoded characters', () => {
+// parseFileUrl only reads the macOS pasteboard; Windows rejects drive-less file URLs.
+test('parses a file URL with encoded characters', { skip: process.platform === 'win32' }, () => {
   const [filePath] = parseFileUrl(Buffer.from('file:///Users/me/My%20Video.mp4'));
   assert.ok(filePath.endsWith('My Video.mp4'));
   assert.ok(!filePath.includes('%20'));

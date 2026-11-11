@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": {
     "name": "Daniel Shalom",
-    "url": "https://github.com/danielShalom"
+    "url": "https://github.com/ponya5"
   },
   "keywords": [
     "clipboard",
@@ -92,11 +92,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/danielShalom/clipbo.git"
+    "url": "https://github.com/ponya5/clipbo.git"
   },
-  "homepage": "https://github.com/danielShalom/clipbo#readme",
+  "homepage": "https://github.com/ponya5/clipbo#readme",
   "bugs": {
-    "url": "https://github.com/danielShalom/clipbo/issues"
+    "url": "https://github.com/ponya5/clipbo/issues"
   },
   "engines": {
     "node": ">=20"

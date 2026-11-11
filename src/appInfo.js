@@ -1,6 +1,6 @@
 /** Public details shown on the About screen. */
 const AUTHOR_NAME = 'Daniel Shalom';
-const GITHUB_PROFILE_URL = 'https://github.com/danielShalom';
+const GITHUB_PROFILE_URL = 'https://github.com/ponya5';
 const PROJECT_URL = `${GITHUB_PROFILE_URL}/clipbo`;
 
 /** Only these links may be opened in the system browser. */

@@ -48,13 +48,6 @@
             "x64",
             "arm64"
           ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
         }
       ],
       "extendInfo": {
@@ -80,10 +73,19 @@
         }
       ]
     },
+    "dmg": {
+      "writeUpdateInfo": false
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "buildUniversalInstaller": false,
+      "differentialPackage": false,
       "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "publishAutoUpdate": false
     },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "portable": {

@@ -5,7 +5,19 @@ on:
     tags: ['v*']
 
 jobs:
+  # Create the draft once; otherwise each matrix job creates its own duplicate draft.
+  draft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - run: gh release view "$GITHUB_REF_NAME" || gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "${GITHUB_REF_NAME#v}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+
   release:
+    needs: draft
     strategy:
       matrix:
         os: [macos-latest, windows-latest]

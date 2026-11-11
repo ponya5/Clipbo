@@ -99,6 +99,6 @@
     "url": "https://github.com/ponya5/Clipbo/issues"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

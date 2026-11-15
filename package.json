@@ -1,6 +1,6 @@
 {
   "name": "clipbo",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Clipboard history manager with image thumbnails and an encrypted password vault for macOS and Windows",
   "main": "src/main.js",
   "license": "MIT",
@@ -89,7 +89,8 @@
       "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
     },
     "publish": {
-      "provider": "github"
+      "provider": "github",
+      "releaseType": "release"
     },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "portable": {

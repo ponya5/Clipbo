@@ -5,14 +5,14 @@ on:
     tags: ['v*']
 
 jobs:
-  # Create the draft once; otherwise each matrix job creates its own duplicate draft.
+  # Create the release once; otherwise each matrix job creates its own duplicate.
   draft:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       # `gh release view <tag>` cannot see drafts, so list releases instead.
-      - run: gh release list --limit 100 --json tagName --jq '.[].tagName' | grep -qxF "$GITHUB_REF_NAME" || gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "${GITHUB_REF_NAME#v}"
+      - run: gh release list --limit 100 --json tagName --jq '.[].tagName' | grep -qxF "$GITHUB_REF_NAME" || gh release create "$GITHUB_REF_NAME" --verify-tag --title "${GITHUB_REF_NAME#v}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}

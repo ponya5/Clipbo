@@ -48,6 +48,13 @@ class ClipboardMonitor {
     this.lastSignature = null;
   }
 
+  /** Clears the clipboard only if it still holds the content with this signature (image or files). */
+  clearIfSignatureEquals(signature) {
+    if (!signature || this.readSnapshot()?.signature !== signature) return;
+    clipboard.clear();
+    this.lastSignature = null;
+  }
+
   /** A clipboard read can fail when another app holds it; just try again on the next tick. */
   checkClipboardSafely() {
     try {

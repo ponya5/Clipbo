@@ -68,9 +68,12 @@ async function moveHistoryItemToVault({ vaultStore, historyStore, settings }, it
   if (!allFilesExist(sources.map((source) => source.path))) {
     return { ok: false, message: 'The file no longer exists at its original location' };
   }
+  const addedIds = [];
   try {
-    for (const source of sources) await vaultStore.addAttachment(source.path, source);
+    for (const source of sources) addedIds.push(await vaultStore.addAttachment(source.path, source));
   } catch (error) {
+    // All or nothing, so a retry never duplicates. The vault may have locked meanwhile, so never throw here.
+    addedIds.forEach((id) => { try { vaultStore.remove(id); } catch { /* locked */ } });
     return { ok: false, message: error.message };
   }
   historyStore.remove(item.id);
@@ -99,9 +102,11 @@ async function buildVaultPreview(vaultStore, entryId) {
 async function pasteAttachment({ vaultStore, clipboardActions }, entry, shouldPaste) {
   try {
     const tempPath = await vaultStore.attachmentToTemp(entry.id);
+    let result = { ok: true };
     if (entry.attachment.kind === 'image') clipboardActions.pasteImage(tempPath, shouldPaste);
-    else return await clipboardActions.pasteFiles([tempPath], shouldPaste);
-    return { ok: true };
+    else result = await clipboardActions.pasteFiles([tempPath], shouldPaste);
+    if (result.ok) clipboardActions.scheduleAttachmentClear(() => vaultStore.files.removeTemp(tempPath));
+    return result;
   } catch {
     return { ok: false, message: 'Could not decrypt this file. The vault data may be damaged.' };
   }
@@ -123,7 +128,12 @@ function registerVaultHandlers({ vaultStore, historyStore, clipboardActions, set
   ipcMain.handle('vault:preview', (_event, entryId) => buildVaultPreview(vaultStore, entryId));
   ipcMain.handle('vault:lock', () => vaultStore.lock());
   ipcMain.handle('vault:list', () => vaultStore.list());
-  ipcMain.handle('vault:get', (_event, entryId) => vaultStore.get(entryId));
+  ipcMain.handle('vault:get', (_event, entryId) => {
+    const entry = vaultStore.get(entryId);
+    if (!entry?.attachment) return entry;
+    const { name, kind, sizeBytes } = entry.attachment; // the file key never leaves the main process
+    return { ...entry, attachment: { name, kind, sizeBytes } };
+  });
   ipcMain.handle('vault:save', (_event, entry) => {
     if (!isValidVaultEntry(entry)) throw new Error('Invalid vault entry');
     vaultStore.save(entry);
@@ -132,7 +142,7 @@ function registerVaultHandlers({ vaultStore, historyStore, clipboardActions, set
   ipcMain.handle('vault:use', (_event, entryId, action) => {
     const entry = vaultStore.get(entryId);
     if (!entry) return;
-    if (entry.attachment) return pasteAttachment({ vaultStore, clipboardActions }, entry, action !== 'copyPassword' && settings.get('autoPaste'));
+    if (entry.attachment) return action === 'pasteUsername' ? { ok: true } : pasteAttachment({ vaultStore, clipboardActions }, entry, action !== 'copyPassword' && settings.get('autoPaste'));
     if (action === 'pastePassword') clipboardActions.pasteSecret(entry.password);
     else if (action === 'copyPassword') clipboardActions.copySecret(entry.password);
     else if (action === 'pasteUsername') clipboardActions.pasteText(entry.username);

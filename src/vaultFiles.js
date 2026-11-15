@@ -47,6 +47,7 @@ class VaultFiles {
   async decryptTo({ blobId, key }, destinationPath) {
     const source = this.blobPath(blobId);
     const size = fs.statSync(source).size;
+    if (size < IV_BYTES + TAG_BYTES) throw new Error('Encrypted file is damaged (too small)');
     const handle = fs.openSync(source, 'r');
     const iv = Buffer.alloc(IV_BYTES);
     const tag = Buffer.alloc(TAG_BYTES);
@@ -59,11 +60,16 @@ class VaultFiles {
     const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(key, 'base64'), iv);
     decipher.setAuthTag(tag);
     try {
-      await pipeline(
-        fs.createReadStream(source, { start: IV_BYTES, end: size - TAG_BYTES - 1 }),
-        decipher,
-        fs.createWriteStream(destinationPath, { mode: 0o600 })
-      );
+      if (size === IV_BYTES + TAG_BYTES) {
+        decipher.final(); // empty file: nothing to stream, but still verify the tag
+        fs.writeFileSync(destinationPath, '', { mode: 0o600 });
+      } else {
+        await pipeline(
+          fs.createReadStream(source, { start: IV_BYTES, end: size - TAG_BYTES - 1 }),
+          decipher,
+          fs.createWriteStream(destinationPath, { mode: 0o600 })
+        );
+      }
     } catch (error) {
       fs.rmSync(destinationPath, { force: true });
       throw error;
@@ -81,6 +87,13 @@ class VaultFiles {
 
   remove(blobId) {
     fs.rmSync(this.blobPath(blobId), { force: true });
+  }
+
+  /** Removes the temp folder that holds one decrypted file. */
+  removeTemp(filePath) {
+    const directory = path.dirname(filePath);
+    fs.rmSync(directory, { recursive: true, force: true });
+    this.tempDirectories = this.tempDirectories.filter((candidate) => candidate !== directory);
   }
 
   clearTemp() {

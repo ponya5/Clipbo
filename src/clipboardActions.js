@@ -44,6 +44,17 @@ class ClipboardActions {
     this.scheduleSecretClear(secret);
   }
 
+  /** Decrypted vault files get the same clear-after timer as secrets; `cleanup` also removes the temp copy. */
+  scheduleAttachmentClear(cleanup) {
+    const clearAfterSeconds = this.settings.get('secretClearSeconds');
+    if (clearAfterSeconds <= 0) return;
+    const { lastSignature: signature } = this.clipboardMonitor; // set when the attachment was just written
+    setTimeout(() => {
+      this.clipboardMonitor.clearIfSignatureEquals(signature);
+      cleanup();
+    }, clearAfterSeconds * 1000);
+  }
+
   /** The user can choose "never" (0) in the tray menu. */
   scheduleSecretClear(secret) {
     const clearAfterSeconds = this.settings.get('secretClearSeconds');

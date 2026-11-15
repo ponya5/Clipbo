@@ -64,3 +64,33 @@ test('backup export and import carry attachments', async () => {
   assert.deepStrictEqual(fs.readFileSync(await restored.attachmentToTemp(entry.id)), bytes);
   assert.ok(directory);
 });
+
+test('empty files round-trip', async () => {
+  const { vault } = unlockedVault();
+  await vault.addAttachment(sourceFile(''), { title: 'Empty', kind: 'file' });
+  const [entry] = vault.list();
+  assert.strictEqual(fs.readFileSync(await vault.attachmentToTemp(entry.id)).length, 0);
+});
+
+test('removeTemp deletes one decrypted copy; truncated blobs fail clearly', async () => {
+  const { directory, vault } = unlockedVault();
+  await vault.addAttachment(sourceFile('abc'), { title: 'Clip', kind: 'file' });
+  const [entry] = vault.list();
+  const tempPath = await vault.attachmentToTemp(entry.id);
+  vault.files.removeTemp(tempPath);
+  assert.ok(!fs.existsSync(tempPath));
+
+  const blobPath = path.join(directory, 'vault-files', fs.readdirSync(path.join(directory, 'vault-files'))[0]);
+  fs.writeFileSync(blobPath, Buffer.alloc(10));
+  await assert.rejects(vault.attachmentToTemp(entry.id), /damaged/);
+});
+
+test('export only replaces Clipbo blobs in an existing -files folder', async () => {
+  const { vault } = unlockedVault();
+  await vault.addAttachment(sourceFile('abc'), { title: 'Clip', kind: 'file' });
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'clipbo-bk-'));
+  fs.mkdirSync(`${folder}/backup-files`);
+  fs.writeFileSync(`${folder}/backup-files/mine.txt`, 'keep me');
+  vault.exportTo(`${folder}/backup.json`);
+  assert.strictEqual(fs.readFileSync(`${folder}/backup-files/mine.txt`, 'utf8'), 'keep me');
+});

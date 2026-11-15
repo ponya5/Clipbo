@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0
+
+- README rewritten with screenshots, shortcuts and a vault security section.
+- Fix: Change master password crashed (buttons were added to the wrong form); the edit form now has Delete and View.
+- Fix: Enter on the delete confirmation cancels (it used to confirm); focus stays inside the dialog.
+- Vault files pasted to the clipboard are cleared on your timer and their temporary decrypted copies are deleted.
+- Safer moves and backups: multi-file moves are all or nothing, empty files work, export never deletes your own files, file keys never reach the window.
+- Release workflow recognises existing drafts; update errors are logged once.
+
 ## 1.4.0
 
 - Fix: deleting a vault entry (and clearing history) did nothing because the native confirm dialog made the pop-up hide itself. Confirmation is now shown inside the app.

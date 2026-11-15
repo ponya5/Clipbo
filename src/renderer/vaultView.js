@@ -278,8 +278,6 @@ export class VaultView {
       el('h2', { text: 'Change master password' }),
       currentInput, newInput, confirmInput, errorMessage,
       el('div', { className: 'form-actions' },
-        ...(id ? [el('button', { className: 'danger', text: 'Delete', attributes: { type: 'button' }, on: { click: () => this.deleteEntry({ id, title }) } })] : []),
-        ...(attachment ? [el('button', { text: 'View', attributes: { type: 'button' }, on: { click: () => this.viewEntry({ id }) } })] : []),
         el('button', { text: 'Cancel', attributes: { type: 'button' }, on: { click: () => this.showList() } }),
         el('button', { className: 'primary', text: 'Change', attributes: { type: 'submit' } })));
 
@@ -343,6 +341,8 @@ export class VaultView {
         : [el('div', { className: 'password-row' }, passwordInput, toggleButton, generateButton)]),
       notesInput,
       el('div', { className: 'form-actions' },
+        ...(id ? [el('button', { className: 'danger', text: 'Delete', attributes: { type: 'button' }, on: { click: () => this.deleteEntry({ id, title }) } })] : []),
+        ...(attachment ? [el('button', { text: 'View', attributes: { type: 'button' }, on: { click: () => this.viewEntry({ id }) } })] : []),
         el('button', { text: 'Cancel', attributes: { type: 'button' }, on: { click: () => this.showList() } }),
         el('button', { className: 'primary', text: 'Save', attributes: { type: 'submit' } })));
 

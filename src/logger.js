@@ -7,7 +7,11 @@ const MAX_LOG_BYTES = 1024 * 1024;
 function createLogger(dataDirectory) {
   const directory = path.join(dataDirectory, 'logs');
   const file = path.join(directory, 'clipbo.log');
-  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  try {
+    fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  } catch {
+    // Logging must never stop the app from starting.
+  }
 
   return function log(level, message, error) {
     try {

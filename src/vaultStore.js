@@ -116,10 +116,10 @@ class VaultStore {
     this.requireUnlocked();
     const { blobId, key } = await this.files.encrypt(sourcePath);
     const attachment = { blobId, key, kind, name: path.basename(sourcePath), sizeBytes: fs.statSync(sourcePath).size };
-    this.entries.push({
-      id: crypto.randomUUID(), title, username: '', password: '', notes: '', attachment, updatedAt: Date.now()
-    });
+    const id = crypto.randomUUID();
+    this.entries.push({ id, title, username: '', password: '', notes: '', attachment, updatedAt: Date.now() });
     this.persist();
+    return id;
   }
 
   /** Decrypted copy in a temp folder for pasting; cleaned on lock and quit. */
@@ -156,8 +156,15 @@ class VaultStore {
   exportTo(destinationPath) {
     if (!this.exists()) throw new Error('There is no vault to export');
     fs.copyFileSync(this.fileStore.filePath, destinationPath);
+    const attachmentsFolder = VaultStore.attachmentsFolderFor(destinationPath);
+    // Only remove Clipbo's own stale blobs; the folder name comes from the user's chosen path.
+    if (fs.existsSync(attachmentsFolder)) {
+      fs.readdirSync(attachmentsFolder)
+        .filter((name) => name.endsWith('.bin'))
+        .forEach((name) => fs.rmSync(path.join(attachmentsFolder, name), { force: true }));
+    }
     if (fs.existsSync(this.files.directory)) {
-      fs.cpSync(this.files.directory, VaultStore.attachmentsFolderFor(destinationPath), { recursive: true });
+      fs.cpSync(this.files.directory, attachmentsFolder, { recursive: true });
     }
   }
 

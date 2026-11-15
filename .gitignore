@@ -5,3 +5,7 @@ installers/
 *.log
 .vscode/
 .idea/
+
+# Local installers
+/dist/
+/installers/

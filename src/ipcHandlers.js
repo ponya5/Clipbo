@@ -1,3 +1,4 @@
+const path = require('path');
 const { pathToFileURL } = require('url');
 const { app, ipcMain, shell } = require('electron');
 const appInfo = require('./appInfo');
@@ -11,7 +12,7 @@ const isNonEmptyString = (value) => typeof value === 'string' && value.length > 
 function isValidVaultEntry(entry) {
   return Boolean(entry)
     && isNonEmptyString(entry.title)
-    && isNonEmptyString(entry.password)
+    && (isNonEmptyString(entry.password) || Boolean(entry.attachment))
     && typeof entry.username === 'string'
     && (entry.notes === undefined || typeof entry.notes === 'string')
     && (entry.id === null || entry.id === undefined || isNonEmptyString(entry.id));
@@ -55,7 +56,44 @@ function registerHistoryHandlers({ historyStore, clipboardActions }) {
   });
 }
 
-function registerVaultHandlers({ vaultStore, clipboardActions }) {
+/** Moves a history image or file(s) into the vault, one entry per file, then drops the history item. */
+async function moveHistoryItemToVault({ vaultStore, historyStore, settings }, itemId) {
+  if (!vaultStore.isUnlocked()) return { ok: false, reason: 'locked', message: 'Unlock the vault first' };
+  const item = historyStore.find(itemId);
+  if (!item) return { ok: false, message: 'Item no longer exists' };
+  const sources = item.type === 'image'
+    ? [{ path: historyStore.imagePathFor(item.id), kind: 'image', title: `Screenshot ${new Date(item.copiedAt).toLocaleString()}` }]
+    : item.paths.map((filePath) => ({ path: filePath, kind: isVideoPath(filePath) ? 'video' : 'file', title: path.basename(filePath) }));
+  if (!allFilesExist(sources.map((source) => source.path))) {
+    return { ok: false, message: 'The file no longer exists at its original location' };
+  }
+  try {
+    for (const source of sources) await vaultStore.addAttachment(source.path, source);
+  } catch (error) {
+    return { ok: false, message: error.message };
+  }
+  historyStore.remove(item.id);
+  // Trash (recoverable), not delete: the plaintext original would otherwise stay on disk.
+  if (item.type === 'file' && settings.get('trashOriginalsOnVaultMove')) {
+    await Promise.all(item.paths.map((filePath) => shell.trashItem(filePath).catch(() => {})));
+  }
+  return { ok: true };
+}
+
+async function pasteAttachment({ vaultStore, clipboardActions }, entry, shouldPaste) {
+  try {
+    const tempPath = await vaultStore.attachmentToTemp(entry.id);
+    if (entry.attachment.kind === 'image') clipboardActions.pasteImage(tempPath, shouldPaste);
+    else return await clipboardActions.pasteFiles([tempPath], shouldPaste);
+    return { ok: true };
+  } catch {
+    return { ok: false, message: 'Could not decrypt this file. The vault data may be damaged.' };
+  }
+}
+
+function registerVaultHandlers({ vaultStore, historyStore, clipboardActions, settings }) {
+  ipcMain.handle('vault:moveFromHistory', (_event, itemId) =>
+    moveHistoryItemToVault({ vaultStore, historyStore, settings }, itemId));
   ipcMain.handle('vault:status', () => ({
     exists: vaultStore.exists(),
     unlocked: vaultStore.isUnlocked()
@@ -77,6 +115,7 @@ function registerVaultHandlers({ vaultStore, clipboardActions }) {
   ipcMain.handle('vault:use', (_event, entryId, action) => {
     const entry = vaultStore.get(entryId);
     if (!entry) return;
+    if (entry.attachment) return pasteAttachment({ vaultStore, clipboardActions }, entry, action !== 'copyPassword' && settings.get('autoPaste'));
     if (action === 'pastePassword') clipboardActions.pasteSecret(entry.password);
     else if (action === 'copyPassword') clipboardActions.copySecret(entry.password);
     else if (action === 'pasteUsername') clipboardActions.pasteText(entry.username);

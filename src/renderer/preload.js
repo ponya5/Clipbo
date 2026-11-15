@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('clipbo', {
     save: invoke('vault:save'),
     remove: invoke('vault:remove'),
     use: invoke('vault:use'),
+    moveFromHistory: invoke('vault:moveFromHistory'),
     changeMasterPassword: invoke('vault:changeMasterPassword')
   },
   settings: {

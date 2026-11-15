@@ -6,6 +6,12 @@ const PASSWORD_ALPHABET =
   'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_=+';
 const QUICK_PICK_COUNT = 9;
 
+function formatSize(bytes) {
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const unitIndex = Math.min(Math.floor(Math.log(bytes || 1) / Math.log(1024)), units.length - 1);
+  return `${(bytes / 1024 ** unitIndex).toFixed(unitIndex ? 1 : 0)} ${units[unitIndex]}`;
+}
+
 function generatePassword(length) {
   const randomValues = crypto.getRandomValues(new Uint32Array(length));
   return Array.from(randomValues, (value) => PASSWORD_ALPHABET[value % PASSWORD_ALPHABET.length]).join('');
@@ -26,8 +32,9 @@ const GATE_HINTS = [['Enter', 'continue'], ['Tab', 'history']];
 
 /** Modes: loading | setup | locked | list | form | changePassword */
 export class VaultView {
-  constructor({ listElement, overlayElement, api, onModeChange, getGeneratorLength }) {
+  constructor({ listElement, overlayElement, api, notify, onModeChange, getGeneratorLength }) {
     this.api = api;
+    this.notify = notify;
     this.getGeneratorLength = getGeneratorLength;
     this.overlayElement = overlayElement;
     this.onModeChange = onModeChange;
@@ -38,7 +45,7 @@ export class VaultView {
     this.list = new ListController(
       listElement,
       (entry, index) => this.buildRow(entry, index),
-      (entry) => this.api.vault.use(entry.id, 'pastePassword')
+      (entry) => this.useEntry(entry.id, 'pastePassword')
     );
   }
 
@@ -79,12 +86,12 @@ export class VaultView {
 
   onEnter(event) {
     const entry = this.list.selectedItem;
-    if (entry) this.api.vault.use(entry.id, event.shiftKey ? 'pasteUsername' : 'pastePassword');
+    if (entry) this.useEntry(entry.id, event.shiftKey ? 'pasteUsername' : 'pastePassword');
   }
 
   onQuickPick(index) {
     const entry = this.list.itemAt(index);
-    if (entry) this.api.vault.use(entry.id, 'pastePassword');
+    if (entry) this.useEntry(entry.id, 'pastePassword');
   }
 
   onEscape() {
@@ -113,7 +120,7 @@ export class VaultView {
     }
     if (!entry) return false;
     if (key === 'c' && !window.getSelection().toString()) {
-      this.api.vault.use(entry.id, 'copyPassword');
+      this.useEntry(entry.id, 'copyPassword');
       return true;
     }
     if (key === 'e') {
@@ -147,9 +154,20 @@ export class VaultView {
   buildRow(entry, index) {
     const content = el('div', { className: 'content' },
       el('div', { className: 'entry-title', text: entry.title }),
-      el('div', { className: 'entry-username', text: entry.username || '—' }));
+      el('div', { className: 'entry-username', text: this.describeEntry(entry) }));
     const badge = index < QUICK_PICK_COUNT ? el('span', { className: 'badge', text: String(index + 1) }) : '';
     return el('li', { className: 'row' }, badge, content, el('div', { className: 'meta', text: '••••••••' }));
+  }
+
+  describeEntry({ username, attachment }) {
+    if (!attachment) return username || '—';
+    const icon = { image: '🖼', video: '🎬' }[attachment.kind] ?? '📄';
+    return `${icon} ${attachment.name} · ${formatSize(attachment.sizeBytes)}`;
+  }
+
+  async useEntry(entryId, action) {
+    const result = await this.api.vault.use(entryId, action);
+    if (result && !result.ok) this.notify(result.message);
   }
 
   async editEntry(entryId) {
@@ -256,7 +274,7 @@ export class VaultView {
 
   // ---- add / edit form ----
 
-  showForm({ id = null, title = '', username = '', password = '', notes = '' }, onSaved = null) {
+  showForm({ id = null, title = '', username = '', password = '', notes = '', attachment = null }, onSaved = null) {
     this.setMode('form');
     const titleInput = this.buildInput('text', 'Name (e.g. OpenAI API key)', title);
     const usernameInput = this.buildInput('text', 'Username, email or label (optional)', username);
@@ -302,7 +320,7 @@ export class VaultView {
     });
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (!titleInput.value.trim() || !passwordInput.value) return;
+      if (!titleInput.value.trim() || (!passwordInput.value && !attachment)) return;
       await this.api.vault.save({
         id,
         title: titleInput.value.trim(),

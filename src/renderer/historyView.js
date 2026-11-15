@@ -20,9 +20,9 @@ function formatAge(timestamp) {
 }
 
 export class HistoryView {
-  constructor({ listElement, api, saveTextToVault, showPreview, notify }) {
+  constructor({ listElement, api, moveToVault, showPreview, notify }) {
     this.api = api;
-    this.saveTextToVault = saveTextToVault;
+    this.moveToVault = moveToVault;
     this.showPreview = showPreview;
     this.notify = notify;
     this.query = '';
@@ -99,8 +99,8 @@ export class HistoryView {
       this.api.history.togglePin(item.id);
       return true;
     }
-    if (event.key.toLowerCase() === 's' && item.type === 'text') {
-      this.saveTextToVault(item);
+    if (event.key.toLowerCase() === 's') {
+      this.moveToVault(item);
       return true;
     }
     return false;
@@ -131,7 +131,7 @@ export class HistoryView {
     const meta = el('div', { className: 'meta' });
     if (item.pinned) meta.append(el('span', { className: 'pin', text: '📌' }));
     meta.append(el('span', { text: formatAge(item.copiedAt) }));
-    if (item.type === 'text') meta.append(this.buildVaultButton(item));
+    meta.append(this.buildVaultButton(item));
 
     const badge = index < QUICK_PICK_COUNT ? el('span', { className: 'badge', text: String(index + 1) }) : '';
     return el('li', { className: 'row' }, badge, content, meta);
@@ -142,7 +142,7 @@ export class HistoryView {
       className: 'vault-button',
       text: '🔒',
       attributes: { type: 'button', title: 'Move to vault', 'aria-label': 'Move to vault' },
-      on: { click: (event) => { event.stopPropagation(); this.saveTextToVault(item); } }
+      on: { click: (event) => { event.stopPropagation(); this.moveToVault(item); } }
     });
   }
 

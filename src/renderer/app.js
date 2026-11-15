@@ -41,16 +41,24 @@ const historyView = new HistoryView({
   api,
   showPreview: (previewData) => preview.show(previewData),
   notify,
-  saveTextToVault: (item) => {
-    // Move, not copy: drop the plaintext history item once the vault has it.
-    vaultView.setDraftPassword(item.text, () => api.history.remove(item.id));
-    switchTab('vault');
+  moveToVault: async (item) => {
+    if (item.type === 'text') {
+      // Move, not copy: drop the plaintext history item once the vault has it.
+      vaultView.setDraftPassword(item.text, () => api.history.remove(item.id));
+      switchTab('vault');
+      return;
+    }
+    const result = await api.vault.moveFromHistory(item.id);
+    if (result.ok) return;
+    notify(result.message);
+    if (result.reason === 'locked') switchTab('vault');
   }
 });
 const vaultView = new VaultView({
   listElement,
   overlayElement,
   api,
+  notify,
   onModeChange: refreshChrome,
   getGeneratorLength: () => generatorLength
 });

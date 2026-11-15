@@ -1,6 +1,8 @@
 const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 const { JsonFileStore } = require('./jsonFileStore');
+const { VaultFiles } = require('./vaultFiles');
 const { createSalt, deriveKey, encryptJson, decryptJson } = require('./vaultCrypto');
 
 const MIN_MASTER_PASSWORD_LENGTH = 8;
@@ -19,6 +21,7 @@ class VaultStore {
     this.onLocked = onLocked;
     this.getAutoLockMs = getAutoLockMs;
     this.fileStore = new JsonFileStore(dataDirectory, 'vault.json', null);
+    this.files = new VaultFiles(dataDirectory);
     this.key = null;
     this.entries = null;
     this.autoLockTimer = null;
@@ -74,6 +77,7 @@ class VaultStore {
     this.key = null;
     this.entries = null;
     clearTimeout(this.autoLockTimer);
+    this.files.clearTemp();
     if (wasUnlocked) this.onLocked();
   }
 
@@ -81,7 +85,12 @@ class VaultStore {
   list() {
     this.requireUnlocked();
     return this.entries
-      .map(({ id, title, username }) => ({ id, title, username }))
+      .map(({ id, title, username, attachment }) => ({
+        id,
+        title,
+        username,
+        attachment: attachment && { name: attachment.name, kind: attachment.kind, sizeBytes: attachment.sizeBytes }
+      }))
       .sort((first, second) => first.title.localeCompare(second.title));
   }
 
@@ -102,8 +111,27 @@ class VaultStore {
     this.persist();
   }
 
+  /** Encrypts a file into the vault as its own entry. `kind` is 'image', 'video' or 'file'. */
+  async addAttachment(sourcePath, { title, kind }) {
+    this.requireUnlocked();
+    const { blobId, key } = await this.files.encrypt(sourcePath);
+    const attachment = { blobId, key, kind, name: path.basename(sourcePath), sizeBytes: fs.statSync(sourcePath).size };
+    this.entries.push({
+      id: crypto.randomUUID(), title, username: '', password: '', notes: '', attachment, updatedAt: Date.now()
+    });
+    this.persist();
+  }
+
+  /** Decrypted copy in a temp folder for pasting; cleaned on lock and quit. */
+  async attachmentToTemp(entryId) {
+    const entry = this.get(entryId);
+    return this.files.decryptToTemp(entry.attachment);
+  }
+
   remove(entryId) {
     this.requireUnlocked();
+    const removed = this.get(entryId);
+    if (removed?.attachment) this.files.remove(removed.attachment.blobId);
     this.entries = this.entries.filter((entry) => entry.id !== entryId);
     this.persist();
   }
@@ -119,10 +147,18 @@ class VaultStore {
     this.persist();
   }
 
-  /** Copies the encrypted vault file; the backup is useless without the master password. */
+  /** Folder next to a backup file that holds its encrypted attachments. */
+  static attachmentsFolderFor(backupPath) {
+    return `${backupPath.replace(/\.json$/i, '')}-files`;
+  }
+
+  /** Copies the encrypted vault file and its encrypted attachments; useless without the master password. */
   exportTo(destinationPath) {
     if (!this.exists()) throw new Error('There is no vault to export');
     fs.copyFileSync(this.fileStore.filePath, destinationPath);
+    if (fs.existsSync(this.files.directory)) {
+      fs.cpSync(this.files.directory, VaultStore.attachmentsFolderFor(destinationPath), { recursive: true });
+    }
   }
 
   /** Replaces the vault with a backup. The previous vault is kept as vault.json.bak. */
@@ -132,6 +168,10 @@ class VaultStore {
     if (!isValidBackup) throw new Error('This file is not a Clipbo vault backup');
     this.lock();
     this.backupCurrentFile();
+    const attachmentsFolder = VaultStore.attachmentsFolderFor(sourcePath);
+    if (fs.existsSync(attachmentsFolder)) {
+      fs.cpSync(attachmentsFolder, this.files.directory, { recursive: true, force: true });
+    }
     this.fileStore.save(backup);
   }
 

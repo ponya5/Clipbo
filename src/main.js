@@ -105,7 +105,10 @@ function startApp() {
   const isHotkeyRegistered = hotkeyManager.register(settings.get('hotkey'));
   if (!isHotkeyRegistered) panelWindow.show('settings');
   app.on('second-instance', () => panelWindow.show());
-  app.on('will-quit', () => hotkeyManager.unregisterAll());
+  app.on('will-quit', () => {
+    hotkeyManager.unregisterAll();
+    vaultStore.files.clearTemp();
+  });
 
   const lockVaultIfConfigured = () => {
     if (settings.get('lockVaultOnSleep')) vaultStore.lock();

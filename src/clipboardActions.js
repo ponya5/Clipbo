@@ -18,17 +18,17 @@ class ClipboardActions {
     this.closePanelAndPaste();
   }
 
-  pasteImage(imagePath) {
+  pasteImage(imagePath, shouldPaste = this.settings.get('autoPaste')) {
     this.clipboardMonitor.writeImage(nativeImage.createFromPath(imagePath));
-    this.closePanelAndPaste();
+    this.closePanelAndPaste(shouldPaste);
   }
 
   /** Returns { ok: false, message } when a file was moved or deleted since it was copied. */
-  async pasteFiles(filePaths) {
+  async pasteFiles(filePaths, shouldPaste = this.settings.get('autoPaste')) {
     if (!allFilesExist(filePaths)) return { ok: false, message: 'The file no longer exists at its original location' };
     await writeFilesToClipboard(filePaths);
     this.clipboardMonitor.syncSignature();
-    this.closePanelAndPaste();
+    this.closePanelAndPaste(shouldPaste);
     return { ok: true };
   }
 
@@ -52,9 +52,9 @@ class ClipboardActions {
   }
 
   /** With "paste automatically" off, the item is only placed on the clipboard. */
-  closePanelAndPaste() {
+  closePanelAndPaste(shouldPaste = this.settings.get('autoPaste')) {
     this.panelWindow.hide();
-    if (!this.settings.get('autoPaste')) return;
+    if (!shouldPaste) return;
     setTimeout(pasteIntoFocusedApp, PASTE_DELAY_MS);
   }
 }

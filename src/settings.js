@@ -80,6 +80,7 @@ const SETTING_SECTIONS = [
     fields: [
       select('vaultAutoLockMinutes', 'Auto-lock after', 15, numberOptions([1, 5, 15, 30, 60, 0], describeMinutes)),
       select('secretClearSeconds', 'Clear copied secrets after', 30, numberOptions([10, 30, 60, 120, 0], describeSeconds)),
+      toggle('trashOriginalsOnVaultMove', 'Move original files to Trash after adding them to the vault', true),
       toggle('lockVaultOnSleep', 'Lock when the computer sleeps', true),
       select('generatorLength', 'Generated password length', 24, numberOptions([16, 24, 32, 48], (length) => `${length} characters`))
     ]

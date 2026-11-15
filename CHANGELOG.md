@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Vault can hold videos, screenshots and files: 🔒 button (or Mod+S) on any History row. Files are encrypted with AES-256-GCM, one key per file.
+- Vault backups now include attachments (saved in a `-files` folder next to the backup file).
+- New setting: move original files to the Trash after adding them to the vault (on by default).
+- Mod+C on a vault attachment copies without pasting.
+
 ## 1.1.0
 
 - Move to vault: 🔒 button (or Mod+S) on History text rows; the history copy is deleted once the vault entry is saved.

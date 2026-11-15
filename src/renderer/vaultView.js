@@ -54,8 +54,9 @@ export class VaultView {
   }
 
   /** Called from History (Mod+S) to store copied text as a new secret. */
-  setDraftPassword(password) {
+  setDraftPassword(password, onSaved = null) {
     this.pendingDraftPassword = password;
+    this.onDraftSaved = onSaved;
   }
 
   async activate() {
@@ -63,8 +64,11 @@ export class VaultView {
     if (!status.exists) return this.showGate('setup');
     if (!status.unlocked) return this.showGate('locked');
     await this.showList();
-    if (this.pendingDraftPassword !== null) this.showForm({ password: this.pendingDraftPassword });
+    if (this.pendingDraftPassword !== null) {
+      this.showForm({ password: this.pendingDraftPassword }, this.onDraftSaved);
+    }
     this.pendingDraftPassword = null;
+    this.onDraftSaved = null;
   }
 
   onSearch(query) {
@@ -252,7 +256,7 @@ export class VaultView {
 
   // ---- add / edit form ----
 
-  showForm({ id = null, title = '', username = '', password = '', notes = '' }) {
+  showForm({ id = null, title = '', username = '', password = '', notes = '' }, onSaved = null) {
     this.setMode('form');
     const titleInput = this.buildInput('text', 'Name (e.g. OpenAI API key)', title);
     const usernameInput = this.buildInput('text', 'Username, email or label (optional)', username);
@@ -306,6 +310,7 @@ export class VaultView {
         password: passwordInput.value,
         notes: notesInput.value
       });
+      if (onSaved) await onSaved();
       await this.showList();
     });
 

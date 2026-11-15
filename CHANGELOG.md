@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Move to vault: 🔒 button (or Mod+S) on History text rows; the history copy is deleted once the vault entry is saved.
+- Auto-update from GitHub releases (macOS updates require a signed build).
+- Error and crash log in the app data folder (`logs/clipbo.log`).
+- Skip copies from Windows password managers, as on macOS.
+
 ## 1.0.0
 
 - Clipboard history for text, images, files and videos with thumbnails, preview, search, pinning.

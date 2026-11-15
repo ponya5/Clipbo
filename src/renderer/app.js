@@ -41,8 +41,9 @@ const historyView = new HistoryView({
   api,
   showPreview: (previewData) => preview.show(previewData),
   notify,
-  saveTextToVault: (text) => {
-    vaultView.setDraftPassword(text);
+  saveTextToVault: (item) => {
+    // Move, not copy: drop the plaintext history item once the vault has it.
+    vaultView.setDraftPassword(item.text, () => api.history.remove(item.id));
     switchTab('vault');
   }
 });

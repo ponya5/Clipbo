@@ -136,3 +136,6 @@ select {
 .about .app-name { font-size: 16px; font-weight: 700; color: var(--accent); }
 .link { background: none; border: 0; padding: 0; color: var(--blue); cursor: pointer; text-decoration: underline; font: inherit; }
 .link:hover { background: none; }
+
+.vault-button { padding: 0 4px; border: 0; background: none; cursor: pointer; opacity: 0; font-size: 13px; }
+.row:hover .vault-button, .row.selected .vault-button { opacity: 1; }

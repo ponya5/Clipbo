@@ -42,7 +42,7 @@ export class HistoryView {
     ['Mod+1-9', 'quick paste'],
     ['Mod+P', 'pin'],
     ['Mod+Y', 'preview'],
-    ['Mod+S', 'save to vault'],
+    ['Mod+S', 'move to vault'],
     ['Mod+⌫', 'delete'],
     ['Tab', 'vault']
   ];
@@ -100,7 +100,7 @@ export class HistoryView {
       return true;
     }
     if (event.key.toLowerCase() === 's' && item.type === 'text') {
-      this.saveTextToVault(item.text);
+      this.saveTextToVault(item);
       return true;
     }
     return false;
@@ -131,9 +131,19 @@ export class HistoryView {
     const meta = el('div', { className: 'meta' });
     if (item.pinned) meta.append(el('span', { className: 'pin', text: '📌' }));
     meta.append(el('span', { text: formatAge(item.copiedAt) }));
+    if (item.type === 'text') meta.append(this.buildVaultButton(item));
 
     const badge = index < QUICK_PICK_COUNT ? el('span', { className: 'badge', text: String(index + 1) }) : '';
     return el('li', { className: 'row' }, badge, content, meta);
+  }
+
+  buildVaultButton(item) {
+    return el('button', {
+      className: 'vault-button',
+      text: '🔒',
+      attributes: { type: 'button', title: 'Move to vault', 'aria-label': 'Move to vault' },
+      on: { click: (event) => { event.stopPropagation(); this.saveTextToVault(item); } }
+    });
   }
 
   buildContent(item) {

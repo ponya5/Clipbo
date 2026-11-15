@@ -1,6 +1,6 @@
 {
   "name": "clipbo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Clipboard history manager with image thumbnails and an encrypted password vault for macOS and Windows",
   "main": "src/main.js",
   "license": "MIT",
@@ -31,7 +31,7 @@
   "build": {
     "appId": "com.clipbo.app",
     "productName": "Clipbo",
-    "copyright": "Copyright \u00a9 Daniel Shalom",
+    "copyright": "Copyright © Daniel Shalom",
     "files": [
       "src/**/*",
       "build/icon.png",
@@ -44,6 +44,13 @@
       "target": [
         {
           "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
           "arch": [
             "x64",
             "arm64"
@@ -73,9 +80,7 @@
         }
       ]
     },
-    "dmg": {
-      "writeUpdateInfo": false
-    },
+    "dmg": {},
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -84,8 +89,7 @@
       "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
     },
     "publish": {
-      "provider": "github",
-      "publishAutoUpdate": false
+      "provider": "github"
     },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "portable": {
@@ -102,5 +106,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
   }
 }

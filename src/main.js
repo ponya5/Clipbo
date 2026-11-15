@@ -12,6 +12,8 @@ const { registerIpcHandlers } = require('./ipcHandlers');
 const { buildTrayMenu } = require('./trayMenu');
 const { formatAccelerator } = require('./acceleratorLabel');
 const { createFileThumbnail } = require('./thumbnailService');
+const { createLogger } = require('./logger');
+const { startAutoUpdate } = require('./updater');
 
 const APP_ID = 'com.clipbo.app';
 const TRAY_ICON_SIZE = 18;
@@ -64,6 +66,11 @@ function createClipboardMonitor({ settings, historyStore }) {
 function startApp() {
   app.setAppUserModelId(APP_ID);
   const dataDirectory = app.getPath('userData');
+  const log = createLogger(dataDirectory);
+  process.on('uncaughtException', (error) => log('error', 'Uncaught exception', error));
+  process.on('unhandledRejection', (reason) => log('error', 'Unhandled rejection', reason instanceof Error ? reason : new Error(String(reason))));
+  app.on('render-process-gone', (_event, _contents, details) => log('error', `Renderer gone: ${details.reason}`));
+  app.on('child-process-gone', (_event, details) => log('error', `${details.type} process gone: ${details.reason}`));
   const settings = new Settings(dataDirectory);
   const panelWindow = new PanelWindow(settings);
   const historyStore = new HistoryStore(
@@ -92,6 +99,7 @@ function startApp() {
   panelWindow.create();
   registerIpcHandlers({ historyStore, vaultStore, settings, settingsController, clipboardActions, panelWindow });
   clipboardMonitor.start();
+  startAutoUpdate(log);
   updateTrayTooltip = createTray({ panelWindow, settings, settingsController, historyStore });
 
   const isHotkeyRegistered = hotkeyManager.register(settings.get('hotkey'));

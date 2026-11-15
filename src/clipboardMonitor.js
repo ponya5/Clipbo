@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { readCopiedFilePaths } = require('./filePasteboard');
 
 const POLL_INTERVAL_MS = 500;
+const WINDOWS_EXCLUDE_FORMAT = 'ExcludeClipboardContentFromMonitorProcessing';
 const MAC_CONCEALED_FORMATS = ['org.nspasteboard.ConcealedType', 'org.nspasteboard.TransientType'];
 
 /**
@@ -87,10 +88,16 @@ class ClipboardMonitor {
     return { kind: 'image', signature: `image:${hash}`, image, hash };
   }
 
-  /** Password managers mark secrets with these macOS pasteboard types. */
+  /** Password managers mark secrets with these macOS pasteboard types or the Windows clipboard format. */
   isSensitiveContent() {
     const availableFormats = clipboard.availableFormats();
-    return MAC_CONCEALED_FORMATS.some((format) => availableFormats.includes(format));
+    if (MAC_CONCEALED_FORMATS.some((format) => availableFormats.includes(format))) return true;
+    if (process.platform !== 'win32') return false;
+    try {
+      return clipboard.readBuffer(WINDOWS_EXCLUDE_FORMAT).length > 0;
+    } catch {
+      return false;
+    }
   }
 }
 

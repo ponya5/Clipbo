@@ -41,6 +41,7 @@ async function buildPreview(historyStore, item) {
 function registerHistoryHandlers({ historyStore, clipboardActions }) {
   ipcMain.handle('history:list', () => historyStore.list());
   ipcMain.handle('history:remove', (_event, itemId) => historyStore.remove(itemId));
+  ipcMain.handle('history:clear', () => historyStore.clear());
   ipcMain.handle('history:togglePin', (_event, itemId) => historyStore.togglePin(itemId));
   ipcMain.handle('history:preview', (_event, itemId) => {
     const item = historyStore.find(itemId);
@@ -80,6 +81,21 @@ async function moveHistoryItemToVault({ vaultStore, historyStore, settings }, it
   return { ok: true };
 }
 
+/** Decrypts an attachment to temp and returns a preview for the overlay. */
+async function buildVaultPreview(vaultStore, entryId) {
+  const entry = vaultStore.get(entryId);
+  if (!entry?.attachment) return null;
+  const { kind, name } = entry.attachment;
+  try {
+    const tempPath = await vaultStore.attachmentToTemp(entryId);
+    if (kind === 'image' || kind === 'video') return { kind, url: pathToFileURL(tempPath).href, name };
+    const previewImage = await createFilePreview(tempPath);
+    return previewImage ? { kind: 'image', url: previewImage } : { kind: 'missing', name };
+  } catch {
+    return { kind: 'missing', name };
+  }
+}
+
 async function pasteAttachment({ vaultStore, clipboardActions }, entry, shouldPaste) {
   try {
     const tempPath = await vaultStore.attachmentToTemp(entry.id);
@@ -104,6 +120,7 @@ function registerVaultHandlers({ vaultStore, historyStore, clipboardActions, set
     isNonEmptyString(masterPassword) ? vaultStore.unlock(masterPassword) : { ok: false, reason: 'wrong' });
   ipcMain.handle('vault:changeMasterPassword', (_event, currentPassword, newPassword) =>
     toResult(() => vaultStore.changeMasterPassword(currentPassword, newPassword)));
+  ipcMain.handle('vault:preview', (_event, entryId) => buildVaultPreview(vaultStore, entryId));
   ipcMain.handle('vault:lock', () => vaultStore.lock());
   ipcMain.handle('vault:list', () => vaultStore.list());
   ipcMain.handle('vault:get', (_event, entryId) => vaultStore.get(entryId));

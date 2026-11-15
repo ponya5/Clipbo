@@ -24,6 +24,8 @@ const LIST_HINTS = [
   ['Shift+Enter', 'paste username'],
   ['Mod+N', 'new'],
   ['Mod+E', 'edit'],
+  ['Mod+Y', 'view file'],
+  ['Mod+⌫', 'delete'],
   ['Mod+M', 'master password'],
   ['Mod+L', 'lock']
 ];
@@ -32,9 +34,10 @@ const GATE_HINTS = [['Enter', 'continue'], ['Tab', 'history']];
 
 /** Modes: loading | setup | locked | list | form | changePassword */
 export class VaultView {
-  constructor({ listElement, overlayElement, api, notify, onModeChange, getGeneratorLength }) {
+  constructor({ listElement, overlayElement, api, notify, showPreview, onModeChange, getGeneratorLength }) {
     this.api = api;
     this.notify = notify;
+    this.showPreview = showPreview;
     this.getGeneratorLength = getGeneratorLength;
     this.overlayElement = overlayElement;
     this.onModeChange = onModeChange;
@@ -123,6 +126,10 @@ export class VaultView {
       this.useEntry(entry.id, 'copyPassword');
       return true;
     }
+    if (key === 'y' && entry.attachment) {
+      this.viewEntry(entry);
+      return true;
+    }
     if (key === 'e') {
       this.editEntry(entry.id);
       return true;
@@ -156,13 +163,32 @@ export class VaultView {
       el('div', { className: 'entry-title', text: entry.title }),
       el('div', { className: 'entry-username', text: this.describeEntry(entry) }));
     const badge = index < QUICK_PICK_COUNT ? el('span', { className: 'badge', text: String(index + 1) }) : '';
-    return el('li', { className: 'row' }, badge, content, el('div', { className: 'meta', text: '••••••••' }));
+    const actions = el('div', { className: 'meta' },
+      ...(entry.attachment ? [this.buildActionButton('👁', 'View', () => this.viewEntry(entry))] : []),
+      this.buildActionButton('✏️', 'Edit', () => this.editEntry(entry.id)),
+      this.buildActionButton('🗑', 'Delete', () => this.deleteEntry(entry)),
+      ...(entry.attachment ? [] : [el('span', { text: '••••••••' })]));
+    return el('li', { className: 'row' }, badge, content, actions);
   }
 
   describeEntry({ username, attachment }) {
     if (!attachment) return username || '—';
     const icon = { image: '🖼', video: '🎬' }[attachment.kind] ?? '📄';
     return `${icon} ${attachment.name} · ${formatSize(attachment.sizeBytes)}`;
+  }
+
+  buildActionButton(icon, label, onClick) {
+    return el('button', {
+      className: 'vault-button',
+      text: icon,
+      attributes: { type: 'button', title: label, 'aria-label': label },
+      on: { click: (event) => { event.stopPropagation(); onClick(); } }
+    });
+  }
+
+  async viewEntry(entry) {
+    const previewData = await this.api.vault.preview(entry.id);
+    if (previewData) this.showPreview(previewData);
   }
 
   async useEntry(entryId, action) {
@@ -251,6 +277,8 @@ export class VaultView {
       el('h2', { text: 'Change master password' }),
       currentInput, newInput, confirmInput, errorMessage,
       el('div', { className: 'form-actions' },
+        ...(id ? [el('button', { className: 'danger', text: 'Delete', attributes: { type: 'button' }, on: { click: () => this.deleteEntry({ id, title }) } })] : []),
+        ...(attachment ? [el('button', { text: 'View', attributes: { type: 'button' }, on: { click: () => this.viewEntry({ id }) } })] : []),
         el('button', { text: 'Cancel', attributes: { type: 'button' }, on: { click: () => this.showList() } }),
         el('button', { className: 'primary', text: 'Change', attributes: { type: 'submit' } })));
 
@@ -309,7 +337,9 @@ export class VaultView {
       el('h2', { text: id ? 'Edit entry' : 'New entry' }),
       titleInput,
       usernameInput,
-      el('div', { className: 'password-row' }, passwordInput, toggleButton, generateButton),
+      ...(attachment
+        ? [el('div', { className: 'image-label', text: this.describeEntry({ attachment }) })]
+        : [el('div', { className: 'password-row' }, passwordInput, toggleButton, generateButton)]),
       notesInput,
       el('div', { className: 'form-actions' },
         el('button', { text: 'Cancel', attributes: { type: 'button' }, on: { click: () => this.showList() } }),
@@ -333,7 +363,7 @@ export class VaultView {
     });
 
     this.overlayElement.replaceChildren(form);
-    (title ? passwordInput : titleInput).focus();
+    (title && !attachment ? passwordInput : titleInput).focus();
   }
 
   // ---- helpers ----

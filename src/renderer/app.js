@@ -12,7 +12,8 @@ const overlayElement = document.getElementById('overlay');
 const hintsElement = document.getElementById('hints');
 const versionElement = document.getElementById('version');
 const toastElement = document.getElementById('toast');
-const tabButtons = [...document.querySelectorAll('.tab')];
+const clearHistoryButton = document.getElementById('clear-history');
+const tabButtons = [...document.querySelectorAll('.tab[data-tab]')];
 
 const preview = new Preview(document.getElementById('preview'));
 const THUMBNAIL_HEIGHTS = { small: '40px', medium: '56px', large: '96px' };
@@ -59,6 +60,7 @@ const vaultView = new VaultView({
   overlayElement,
   api,
   notify,
+  showPreview: (previewData) => preview.show(previewData),
   onModeChange: refreshChrome,
   getGeneratorLength: () => generatorLength
 });
@@ -82,6 +84,7 @@ function refreshChrome() {
   searchInput.hidden = !isListMode;
   listElement.hidden = !isListMode;
   overlayElement.hidden = isListMode;
+  clearHistoryButton.hidden = activeTabName !== 'history';
   tabButtons.forEach((button) => button.classList.toggle('active', button.dataset.tab === activeTabName));
 
   hintsElement.replaceChildren(...view.hints.map(([keys, label]) =>
@@ -162,6 +165,9 @@ async function refreshActiveView() {
   refreshChrome();
 }
 
+clearHistoryButton.addEventListener('click', () => {
+  if (confirm('Clear clipboard history? Pinned items are kept.')) api.history.clear();
+});
 tabButtons.forEach((button) => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 searchInput.addEventListener('input', () => activeView().onSearch(searchInput.value));
 document.addEventListener('keydown', handleKeyDown);

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Vault rows have Edit, Delete and (for files) View buttons; the edit form can delete the entry; Mod+Y views attachments.
+- Clear button (🧹) in History; pinned items are kept.
+
 ## 1.2.0
 
 - Vault can hold videos, screenshots and files: 🔒 button (or Mod+S) on any History row. Files are encrypted with AES-256-GCM, one key per file.

@@ -139,3 +139,4 @@ select {
 
 .vault-button { padding: 0 4px; border: 0; background: none; cursor: pointer; opacity: 0; font-size: 13px; }
 .row:hover .vault-button, .row.selected .vault-button { opacity: 1; }
+.danger { margin-right: auto; color: var(--danger); }

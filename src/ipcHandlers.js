@@ -158,7 +158,7 @@ function registerSettingsHandlers({ settings, settingsController, vaultStore, pa
   ipcMain.handle('settings:getValues', () => ({ ...settings.values }));
   ipcMain.handle('settings:set', (_event, name, value) => settingsController.change(name, value));
   ipcMain.handle('settings:setLaunchAtLogin', (_event, enabled) =>
-    app.setLoginItemSettings({ openAtLogin: Boolean(enabled) }));
+    app.isPackaged && app.setLoginItemSettings({ openAtLogin: Boolean(enabled) }));
 
   ipcMain.handle('backup:export', () => panelWindow.runWithoutAutoHide(() => exportVaultBackup(vaultStore)));
   ipcMain.handle('backup:import', async () => {

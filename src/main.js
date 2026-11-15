@@ -31,7 +31,8 @@ function createTray({ panelWindow, settings, settingsController, historyStore })
     openSettings: () => panelWindow.show('settings'),
     setRecordingPaused: (isPaused) => settingsController.change('recordingPaused', isPaused),
     clearHistory: () => historyStore.clear(),
-    setLaunchAtLogin: (enabled) => app.setLoginItemSettings({ openAtLogin: enabled }),
+    // Unpackaged dev runs would register the bare Electron.app as a login item.
+    setLaunchAtLogin: (enabled) => app.isPackaged && app.setLoginItemSettings({ openAtLogin: enabled }),
     quit: () => app.quit()
   };
 

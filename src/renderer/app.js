@@ -3,6 +3,7 @@ import { VaultView } from './vaultView.js';
 import { SettingsView } from './settingsView.js';
 import { commandKeyLabel, hasCommandKey, digitIndex } from './keyboard.js';
 import { el } from './dom.js';
+import { confirmAction } from './confirm.js';
 import { Preview } from './preview.js';
 
 const api = window.clipbo;
@@ -165,8 +166,8 @@ async function refreshActiveView() {
   refreshChrome();
 }
 
-clearHistoryButton.addEventListener('click', () => {
-  if (confirm('Clear clipboard history? Pinned items are kept.')) api.history.clear();
+clearHistoryButton.addEventListener('click', async () => {
+  if (await confirmAction('Clear clipboard history? Pinned items are kept.', 'Clear')) api.history.clear();
 });
 tabButtons.forEach((button) => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 searchInput.addEventListener('input', () => activeView().onSearch(searchInput.value));

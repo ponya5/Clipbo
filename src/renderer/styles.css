@@ -140,3 +140,9 @@ select {
 .vault-button { padding: 0 4px; border: 0; background: none; cursor: pointer; opacity: 0; font-size: 13px; }
 .row:hover .vault-button, .row.selected .vault-button { opacity: 1; }
 .danger { margin-right: auto; color: var(--danger); }
+#confirm {
+  position: fixed; inset: 0; z-index: 12; display: flex; align-items: center; justify-content: center;
+  background: #050c24ee; padding: 16px;
+}
+.confirm-box { background: var(--surface); border: 1px solid var(--blue); border-radius: 12px; padding: 16px; max-width: 360px; }
+.confirm-box p { margin: 0 0 12px; line-height: 1.4; word-break: break-word; }

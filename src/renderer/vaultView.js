@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { confirmAction } from './confirm.js';
 import { ListController } from './listController.js';
 import { commandKeyLabel, hasCommandKey, isBackspaceOrDelete } from './keyboard.js';
 
@@ -202,7 +203,7 @@ export class VaultView {
   }
 
   async deleteEntry(entry) {
-    if (!confirm(`Delete "${entry.title}" from the vault? This cannot be undone.`)) return;
+    if (!await confirmAction(`Delete "${entry.title}" from the vault? This cannot be undone.`)) return;
     await this.api.vault.remove(entry.id);
     await this.showList();
   }

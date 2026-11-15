@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- Fix: deleting a vault entry (and clearing history) did nothing because the native confirm dialog made the pop-up hide itself. Confirmation is now shown inside the app.
+
 ## 1.3.0
 
 - Vault rows have Edit, Delete and (for files) View buttons; the edit form can delete the entry; Mod+Y views attachments.

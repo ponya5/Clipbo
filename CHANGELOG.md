@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.3
+
+- Vault entry form: copy buttons next to the username/email field and the secret. Copying a secret honours the clear-after timer and is not recorded in history.
+
 ## 1.5.0
 
 - README rewritten with screenshots, shortcuts and a vault security section.

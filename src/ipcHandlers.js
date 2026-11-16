@@ -139,6 +139,9 @@ function registerVaultHandlers({ vaultStore, historyStore, clipboardActions, set
     vaultStore.save(entry);
   });
   ipcMain.handle('vault:remove', (_event, entryId) => vaultStore.remove(entryId));
+  ipcMain.handle('vault:copyField', (_event, text, isSecret) => {
+    if (typeof text === 'string' && text) clipboardActions.copyField(text, Boolean(isSecret));
+  });
   ipcMain.handle('vault:use', (_event, entryId, action) => {
     const entry = vaultStore.get(entryId);
     if (!entry) return;

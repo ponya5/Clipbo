@@ -44,6 +44,12 @@ class ClipboardActions {
     this.scheduleSecretClear(secret);
   }
 
+  /** Copies a form field without closing the panel; secrets get the clear-after timer. */
+  copyField(text, isSecret) {
+    this.clipboardMonitor.writeText(text);
+    if (isSecret) this.scheduleSecretClear(text);
+  }
+
   /** Decrypted vault files get the same clear-after timer as secrets; `cleanup` also removes the temp copy. */
   scheduleAttachmentClear(cleanup) {
     const clearAfterSeconds = this.settings.get('secretClearSeconds');

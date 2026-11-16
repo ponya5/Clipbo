@@ -100,6 +100,8 @@ button {
 button:hover { background: var(--surface-hover); }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 700; }
 .password-row { display: flex; gap: 6px; }
+.field-row { display: flex; gap: 6px; }
+.field-row input { flex: 1; min-width: 0; }
 .password-row input { flex: 1; min-width: 0; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 .error { color: var(--danger); min-height: 18px; font-size: 13px; }

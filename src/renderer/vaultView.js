@@ -332,13 +332,19 @@ export class VaultView {
       }
     });
 
+    const copyButton = (input, isSecret) => el('button', {
+      text: '📋',
+      attributes: { type: 'button', title: isSecret ? 'Copy secret' : 'Copy', 'aria-label': isSecret ? 'Copy secret' : 'Copy' },
+      on: { click: () => this.api.vault.copyField(input.value, isSecret) }
+    });
+
     const form = el('form', { className: 'entry-form' },
       el('h2', { text: id ? 'Edit entry' : 'New entry' }),
       titleInput,
-      usernameInput,
+      el('div', { className: 'field-row' }, usernameInput, copyButton(usernameInput, false)),
       ...(attachment
         ? [el('div', { className: 'image-label', text: this.describeEntry({ attachment }) })]
-        : [el('div', { className: 'password-row' }, passwordInput, toggleButton, generateButton)]),
+        : [el('div', { className: 'password-row' }, passwordInput, toggleButton, generateButton, copyButton(passwordInput, true))]),
       notesInput,
       el('div', { className: 'form-actions' },
         ...(id ? [el('button', { className: 'danger', text: 'Delete', attributes: { type: 'button' }, on: { click: () => this.deleteEntry({ id, title }) } })] : []),

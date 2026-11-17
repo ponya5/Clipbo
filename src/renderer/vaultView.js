@@ -175,7 +175,7 @@ export class VaultView {
   buildCopyButtons(entry) {
     const copySecretButton = this.buildActionButton('🔑', 'Copy secret', () => this.useEntry(entry.id, 'copyPassword'));
     if (!entry.username) return [copySecretButton];
-    const copyUsernameButton = this.buildActionButton('👤', 'Copy username / email', () => this.useEntry(entry.id, 'copyUsername'));
+    const copyUsernameButton = this.buildActionButton('✉️', 'Copy username / email', () => this.useEntry(entry.id, 'copyUsername'));
     return [copyUsernameButton, copySecretButton];
   }
 

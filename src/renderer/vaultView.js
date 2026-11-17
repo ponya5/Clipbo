@@ -168,8 +168,7 @@ export class VaultView {
       ...(entry.attachment ? [this.buildActionButton('👁', 'View', () => this.viewEntry(entry))] : []),
       ...(entry.attachment ? [] : this.buildCopyButtons(entry)),
       this.buildActionButton('✏️', 'Edit', () => this.editEntry(entry.id)),
-      this.buildActionButton('🗑', 'Delete', () => this.deleteEntry(entry)),
-      ...(entry.attachment ? [] : [el('span', { text: '••••••••' })]));
+      this.buildActionButton('🗑', 'Delete', () => this.deleteEntry(entry)));
     return el('li', { className: 'row' }, badge, content, actions);
   }
 

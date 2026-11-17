@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+- Vault list: copy secret and copy username/email buttons on every entry row.
+- Installing a newer version replaces the old one instead of creating a duplicate; a newer launch takes over from an older running instance.
+- Windows: one-click per-user installer that upgrades in place (portable build removed).
+- macOS: `npm run install:mac` builds and replaces the copy in Applications.
+
 ## 1.5.3
 
 - Vault entry form: copy buttons next to the username/email field and the secret. Copying a secret honours the clear-after timer and is not recorded in history.

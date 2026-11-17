@@ -44,6 +44,11 @@ class ClipboardActions {
     this.scheduleSecretClear(secret);
   }
 
+  copyPlainText(text) {
+    this.clipboardMonitor.writeText(text);
+    this.panelWindow.hide();
+  }
+
   /** Copies a form field without closing the panel; secrets get the clear-after timer. */
   copyField(text, isSecret) {
     this.clipboardMonitor.writeText(text);

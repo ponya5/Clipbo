@@ -166,10 +166,18 @@ export class VaultView {
     const badge = index < QUICK_PICK_COUNT ? el('span', { className: 'badge', text: String(index + 1) }) : '';
     const actions = el('div', { className: 'meta' },
       ...(entry.attachment ? [this.buildActionButton('👁', 'View', () => this.viewEntry(entry))] : []),
+      ...(entry.attachment ? [] : this.buildCopyButtons(entry)),
       this.buildActionButton('✏️', 'Edit', () => this.editEntry(entry.id)),
       this.buildActionButton('🗑', 'Delete', () => this.deleteEntry(entry)),
       ...(entry.attachment ? [] : [el('span', { text: '••••••••' })]));
     return el('li', { className: 'row' }, badge, content, actions);
+  }
+
+  buildCopyButtons(entry) {
+    const copySecretButton = this.buildActionButton('🔑', 'Copy secret', () => this.useEntry(entry.id, 'copyPassword'));
+    if (!entry.username) return [copySecretButton];
+    const copyUsernameButton = this.buildActionButton('👤', 'Copy username / email', () => this.useEntry(entry.id, 'copyUsername'));
+    return [copyUsernameButton, copySecretButton];
   }
 
   describeEntry({ username, attachment }) {

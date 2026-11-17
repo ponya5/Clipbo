@@ -145,10 +145,11 @@ function registerVaultHandlers({ vaultStore, historyStore, clipboardActions, set
   ipcMain.handle('vault:use', (_event, entryId, action) => {
     const entry = vaultStore.get(entryId);
     if (!entry) return;
-    if (entry.attachment) return action === 'pasteUsername' ? { ok: true } : pasteAttachment({ vaultStore, clipboardActions }, entry, action !== 'copyPassword' && settings.get('autoPaste'));
+    if (entry.attachment) return ['pasteUsername', 'copyUsername'].includes(action) ? { ok: true } : pasteAttachment({ vaultStore, clipboardActions }, entry, action !== 'copyPassword' && settings.get('autoPaste'));
     if (action === 'pastePassword') clipboardActions.pasteSecret(entry.password);
     else if (action === 'copyPassword') clipboardActions.copySecret(entry.password);
     else if (action === 'pasteUsername') clipboardActions.pasteText(entry.username);
+    else if (action === 'copyUsername' && entry.username) clipboardActions.copyPlainText(entry.username);
   });
 }
 

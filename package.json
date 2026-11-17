@@ -22,7 +22,8 @@
     "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
     "build": "electron-builder --mac --win",
-    "audit:prod": "npm audit --omit=dev"
+    "audit:prod": "npm audit --omit=dev",
+    "install:mac": "bash scripts/install-mac.sh"
   },
   "devDependencies": {
     "electron": "^43.8.8",
@@ -71,20 +72,15 @@
             "x64",
             "arm64"
           ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
         }
       ]
     },
     "dmg": {},
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "buildUniversalInstaller": false,
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
       "differentialPackage": false,
       "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
     },
@@ -92,10 +88,7 @@
       "provider": "github",
       "releaseType": "release"
     },
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
-    "portable": {
-      "artifactName": "${productName}-Portable-${version}-${arch}.${ext}"
-    }
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   },
   "repository": {
     "type": "git",

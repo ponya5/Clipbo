@@ -13,6 +13,7 @@ const { buildTrayMenu } = require('./trayMenu');
 const { formatAccelerator } = require('./acceleratorLabel');
 const { createFileThumbnail } = require('./thumbnailService');
 const { createLogger } = require('./logger');
+const { describeThisInstance, shouldHandOverTo, handOverTo } = require('./singleInstance');
 const { startAutoUpdate } = require('./updater');
 
 const APP_ID = 'com.clipbo.app';
@@ -105,7 +106,13 @@ function startApp() {
 
   const isHotkeyRegistered = hotkeyManager.register(settings.get('hotkey'));
   if (!isHotkeyRegistered) panelWindow.show('settings');
-  app.on('second-instance', () => panelWindow.show());
+  app.on('second-instance', (_event, _argv, _workingDirectory, otherInstance) => {
+    if (shouldHandOverTo(otherInstance)) {
+      handOverTo(otherInstance);
+      return;
+    }
+    panelWindow.show();
+  });
   app.on('will-quit', () => {
     hotkeyManager.unregisterAll();
     vaultStore.files.clearTemp();
@@ -118,7 +125,7 @@ function startApp() {
   powerMonitor.on('lock-screen', lockVaultIfConfigured);
 }
 
-if (!app.requestSingleInstanceLock()) {
+if (!app.requestSingleInstanceLock(describeThisInstance())) {
   app.quit();
 } else {
   app.dock?.hide();

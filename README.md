@@ -93,6 +93,8 @@ Download the installer for your system from the [Releases](../../releases) page.
 - **macOS:** open the `.dmg`, drag Clipbo to Applications, then right-click and choose **Open** the first time. Grant Accessibility permission if you want Clipbo to paste for you.
 - **Windows:** run the installer. If SmartScreen warns about an unsigned app, choose **More info → Run anyway**.
 
+Installing a newer version replaces the old one (same location, same data), so you never end up with two copies. Your history and vault are kept. If Clipbo is already running, launching a newer build makes it take over from the older one.
+
 ## Privacy and security
 
 ### How the vault is protected
@@ -131,6 +133,7 @@ npm install
 npm start          # run
 npm test           # test
 npm run build      # build macOS and Windows installers into dist/
+npm run install:mac  # macOS: build and replace the copy in /Applications
 ```
 
 ## Contributing
